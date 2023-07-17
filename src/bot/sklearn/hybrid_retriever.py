@@ -3,7 +3,6 @@ import pickle
 from pathlib import Path
 from typing import List
 
-from langchain.callbacks.manager import AsyncCallbackManagerForRetrieverRun, CallbackManagerForRetrieverRun
 from langchain.embeddings.base import Embeddings
 from langchain.retrievers import TFIDFRetriever
 from langchain.schema import BaseRetriever, Document
@@ -11,10 +10,15 @@ from langchain.vectorstores import SKLearnVectorStore
 
 
 class SKLearnHybridRetriever(BaseRetriever):
-    vector_store: SKLearnVectorStore
-    sparse_retriever: TFIDFRetriever
-    embeddings: Embeddings
-    k: int = 4
+
+    def __init__(self, vector_store: SKLearnVectorStore,
+                 sparse_retriever: TFIDFRetriever,
+                 embeddings: Embeddings,
+                 k: int = 4):
+        self.vector_store = vector_store
+        self.sparse_retriever = sparse_retriever
+        self.embeddings = embeddings
+        self.k = k
 
     @classmethod
     def from_documents(cls, docs: List[Document], embeddings: Embeddings, index_path: Path, k=4):
@@ -52,7 +56,7 @@ class SKLearnHybridRetriever(BaseRetriever):
         with open(index_path / "sparse" / 'tfidf_array.npz', 'wb') as file:
             scipy.sparse.save_npz(file, self.sparse_retriever.tfidf_array)
 
-    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
+    def get_relevant_documents(self, query: str) -> List[Document]:
         vector_store_retriever = self.vector_store.as_retriever(search_kwargs={'k': self.k})
         vector_fetched = vector_store_retriever.get_relevant_documents(query)
 
@@ -62,6 +66,5 @@ class SKLearnHybridRetriever(BaseRetriever):
 
         return list(unique_docs_dict.values())
 
-    async def _aget_relevant_documents(self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun) -> List[
-        Document]:
+    async def aget_relevant_documents(self, query: str) -> List[Document]:
         raise NotImplementedError

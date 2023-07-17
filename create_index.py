@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 from typing import List
 
+import sklearn.metrics
 from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
@@ -15,6 +16,8 @@ from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextS
 
 from bot.indexer.sklearn_indexer import SKLearnIndexer
 
+
+# import sklearn.metrics
 
 def ingest_pdf_file(pdf_file: str, text_splitter: TextSplitter):
     logging.debug(f"Ingesting pdf file {pdf_file}")
@@ -62,9 +65,9 @@ def main():
     logging.config.fileConfig('logging.ini')
 
     parser = argparse.ArgumentParser(description='Process command line arguments.')
-    parser.add_argument('--data_dir', type=str, default='data', help='Directory to read data from')
-    parser.add_argument('--cache_dir', type=str, default='cache', help='Cache directory')
-    parser.add_argument('--index_dir', type=str, default='index', help='Directory to save index')
+    parser.add_argument('--data_dir', type=str, default='test/data', help='Directory to read data from')
+    parser.add_argument('--cache_dir', type=str, default='run/cache', help='Cache directory')
+    parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
     parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
                         help='sentence-transformer embedding model')
 
@@ -88,7 +91,7 @@ def main():
 
     # 'max_seq_length': 384, 768 dimensional dense vector
     # model_name = "sentence-transformers/all-mpnet-base-v2"  # default
-
+    
     text_splitter = SentenceTransformersTokenTextSplitter(model_name=st_model_name)
     logging.debug(f"Text chunk length: {text_splitter.tokens_per_chunk}")
 
