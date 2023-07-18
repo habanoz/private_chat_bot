@@ -10,7 +10,10 @@ from langchain.vectorstores import SKLearnVectorStore
 
 
 class SKLearnHybridRetriever(BaseRetriever):
-
+    vector_store=None
+    sparse_retriever=None
+    embeddings=None
+    k=1
     def __init__(self, vector_store: SKLearnVectorStore,
                  sparse_retriever: TFIDFRetriever,
                  embeddings: Embeddings,
