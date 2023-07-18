@@ -131,7 +131,7 @@ def main():
 
     cache_documents(docs, cache_path)
 
-    dense_embedder = HuggingFaceEmbeddings()
+    dense_embedder = HuggingFaceEmbeddings(model_name=st_model_name)
     index_data(docs, dense_embedder, index_path)
 
 
