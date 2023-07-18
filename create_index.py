@@ -14,6 +14,7 @@ from langchain.schema import Document
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextSplitter
 
 from bot.indexer.sklearn_indexer import SKLearnIndexer
+from bot.loader.doc_csv_loader import DocCsvLoder
 
 
 # import sklearn.metrics
@@ -39,9 +40,31 @@ def ingest_pdf_data(pdf_data_path: Path, text_splitter: TextSplitter):
     return pdf_docs
 
 
+def ingest_doc_csv_file(csv_path: Path, text_splitter: TextSplitter):
+    logging.debug(f"Ingesting csv file {csv_path}")
+
+    docs = DocCsvLoder(csv_path).load()
+    docs = text_splitter.split_documents(docs)
+
+    return docs
+
+
+def ingest_doc_csv_data(csv_path: Path, text_splitter: TextSplitter):
+    search_pattern = f"{csv_path}/*.csv"
+    files = glob.glob(search_pattern)
+
+    all_docs = []
+    for file in files:
+        docs = ingest_doc_csv_file(Path(file), text_splitter)
+        all_docs.extend(docs)
+
+    return all_docs
+
+
 def ingest_data(data_path: Path, text_splitter: TextSplitter):
-    pdf_docs = ingest_pdf_data(data_path / "pdf", text_splitter)
-    return pdf_docs
+    # pdf_docs = ingest_pdf_data(data_path / "pdf", text_splitter)
+    doc_csv = ingest_doc_csv_data(data_path / "doc_csv", text_splitter)
+    return doc_csv
 
 
 def cache_documents(docs: List[Document], cache_path: Path):
@@ -64,7 +87,7 @@ def main():
     logging.config.fileConfig('logging.ini')
 
     parser = argparse.ArgumentParser(description='Process command line arguments.')
-    parser.add_argument('--data_dir', type=str, default='test/data', help='Directory to read data from')
+    parser.add_argument('--data_dir', type=str, default='data', help='Directory to read data from')
     parser.add_argument('--cache_dir', type=str, default='run/cache', help='Cache directory')
     parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
     parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
@@ -101,6 +124,11 @@ def main():
     logging.debug(f"Text chunk length: {text_splitter.tokens_per_chunk}")
 
     docs = ingest_data(data_path, text_splitter)
+
+    if docs is None or len(docs) == 0:
+        print("No data to index")
+        return
+
     cache_documents(docs, cache_path)
 
     dense_embedder = HuggingFaceEmbeddings()
