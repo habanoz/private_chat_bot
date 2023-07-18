@@ -13,8 +13,8 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextSplitter
 
-from bot.indexer.sklearn_indexer import SKLearnIndexer
-from bot.loader.doc_csv_loader import DocCsvLoder
+from scripts.bot.indexer.sklearn_indexer import SKLearnIndexer
+from scripts.bot.loader.doc_csv_loader import DocCsvLoder
 
 
 # import sklearn.metrics

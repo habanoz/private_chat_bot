@@ -7,8 +7,8 @@ from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
 from transformers import AutoTokenizer
 
-from bot.loader.doc_csv_loader import DocCsvLoder
-from bot.retriever.sklearn_retriever import SKLearnRetriever
+from scripts.bot.loader.doc_csv_loader import DocCsvLoder
+from scripts.bot.retriever.sklearn_retriever import SKLearnRetriever
 
 langchain.debug=True
 os.environ['DEBUG'] = 'True'

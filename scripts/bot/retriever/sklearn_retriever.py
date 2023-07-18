@@ -5,7 +5,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.vectorstores import SKLearnVectorStore
 
-from bot.sklearn.hybrid_retriever import SKLearnHybridRetriever
+from scripts.bot.sklearn.hybrid_retriever import SKLearnHybridRetriever
 
 
 class SKLearnRetriever:
