@@ -7,7 +7,6 @@ import shutil
 from pathlib import Path
 from typing import List
 
-import sklearn.metrics
 from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
@@ -70,6 +69,9 @@ def main():
     parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
     parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
                         help='sentence-transformer embedding model')
+    parser.add_argument('--chunk-size', type=int, default=None,
+                        help='Large text will be split into chunks of this size. 0 means model maximum allowed.')
+    parser.add_argument('--chunk-overlap', type=int, default=20, help='Chunks will have overlap of this size.')
 
     args = parser.parse_args()
 
@@ -77,6 +79,8 @@ def main():
     cache_path = Path(args.cache_dir)
     index_path = Path(args.index_dir)
     st_model_name = args.st_model_name
+    chunk_size = args.chunk_size
+    chunk_overlap = args.chunk_overlap
 
     logging.debug(f"Reading data from directory: {data_path}")
     logging.debug(f"Cache directory: {cache_path}")
@@ -91,8 +95,9 @@ def main():
 
     # 'max_seq_length': 384, 768 dimensional dense vector
     # model_name = "sentence-transformers/all-mpnet-base-v2"  # default
-    
-    text_splitter = SentenceTransformersTokenTextSplitter(model_name=st_model_name)
+
+    text_splitter = SentenceTransformersTokenTextSplitter(model_name=st_model_name, chunk_overlap=chunk_overlap,
+                                                          tokens_per_chunk=chunk_size)
     logging.debug(f"Text chunk length: {text_splitter.tokens_per_chunk}")
 
     docs = ingest_data(data_path, text_splitter)
