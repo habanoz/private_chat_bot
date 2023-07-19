@@ -69,7 +69,7 @@ def ingest_data(data_path: Path, text_splitter: TextSplitter):
 
 def cache_documents(docs: List[Document], cache_path: Path):
     if not cache_path.exists():
-        cache_path.mkdir()
+        cache_path.mkdir(parents=True)
 
     name = "document"
     docs_dict = [(doc.page_content, doc.metadata) for doc in docs]
