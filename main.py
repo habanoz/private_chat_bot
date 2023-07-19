@@ -16,7 +16,7 @@ os.environ['DEBUG'] = 'True'
 MODEL_NAMES = ["togethercomputer/RedPajama-INCITE-Chat-3B-v1", "tiiuae/falcon-7b-instruct"]
 MODEL_NAME = MODEL_NAMES[1]
 def main():
-    docs = DocCsvLoder(Path("data/doc_csv/squad-train-docs-unique.csv")).load()
+    docs = DocCsvLoder(Path("data/doc_csv/squad-validation-docs-unique.csv")).load()
 
     dense_embedder = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2')
     retriever = SKLearnRetriever.Dense.from_index(docs, dense_embedder, Path("run/index"), k=1)
