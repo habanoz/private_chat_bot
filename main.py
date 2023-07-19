@@ -82,6 +82,7 @@ def get_hf_model(model_name: str):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     #tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=True)
     model = model.eval()
+    logging.debug(f"Model max sequence length {model.max_seq_length}")
 
     generation_config = model.generation_config
     generation_config.temperature = 0
