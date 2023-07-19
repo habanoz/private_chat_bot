@@ -10,10 +10,10 @@ from langchain.vectorstores import SKLearnVectorStore
 
 
 class SKLearnHybridRetriever(BaseRetriever):
-    vector_store:SKLearnVectorStore=None
-    sparse_retriever:TFIDFRetriever=None
-    embeddings:Embeddings=None
-    k=1
+    vector_store: SKLearnVectorStore
+    sparse_retriever: TFIDFRetriever
+    embeddings: Embeddings
+    k: int = 4
 
     @classmethod
     def from_documents(cls, docs: List[Document], embeddings: Embeddings, index_path: Path, k=4):
