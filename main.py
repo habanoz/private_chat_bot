@@ -16,7 +16,7 @@ os.environ['DEBUG'] = 'True'
 os.environ['OPENAI_API_KEY'] = ""
 
 MODEL_NAMES = ["togethercomputer/RedPajama-INCITE-Chat-3B-v1", "tiiuae/falcon-7b-instruct"]
-MODEL_NAME = MODEL_NAMES[0]
+MODEL_NAME = MODEL_NAMES[1]
 
 
 def main():
