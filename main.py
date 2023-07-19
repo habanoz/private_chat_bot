@@ -1,3 +1,6 @@
+import argparse
+import logging
+import logging.config
 import os
 from pathlib import Path
 
@@ -5,69 +8,81 @@ import langchain
 from langchain import HuggingFacePipeline, PromptTemplate, OpenAI
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, LlamaTokenizer
 
-from scripts.bot.loader.doc_csv_loader import DocCsvLoder
+from bot.loader.document_cache import DocumentCache
 from scripts.bot.retriever.sklearn_retriever import SKLearnRetriever
-import os
 
 langchain.debug = True
 os.environ['DEBUG'] = 'True'
 os.environ['OPENAI_API_KEY'] = ""
 
-MODEL_NAMES = ["togethercomputer/RedPajama-INCITE-Chat-3B-v1", "tiiuae/falcon-7b-instruct"]
-MODEL_NAME = MODEL_NAMES[1]
-
 
 def main():
-    docs = DocCsvLoder(Path("data/doc_csv/squad-validation-docs-unique.csv")).load()
+    logging.config.fileConfig('logging.ini')
 
-    dense_embedder = HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2')
-    retriever = SKLearnRetriever.Dense.from_index(docs, dense_embedder, Path("run/index"), k=1)
+    parser = argparse.ArgumentParser(description='Process command line arguments.')
+    parser.add_argument('--data_dir', type=str, default='data', help='Directory to read data from')
+    parser.add_argument('--cache_dir', type=str, default='run/cache', help='Cache directory')
+    parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
+    parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
+                        help='sentence-transformer embedding model')
+    parser.add_argument('--hf_model_name', type=str, default='eachadea/vicuna-7b-1.1', help='Huggingface model name')
+    parser.add_argument('--oai_model_name', type=str, default='text-davinci-003', help='OpenAI model name')
+    parser.add_argument('--model_platform', type=str, default='hf', choices=['hf', 'oai'], help='Model platform')
+    parser.add_argument('--k', type=int, default=1, help='retrieval k')
+    parser.add_argument('--question', type=str, default='What areas did Beyonce compete in when she was growing up?',
+                        help='Question')
 
-    question = "What areas did Beyonce compete in when she was growing up?"
+    args = parser.parse_args()
 
-    llm = get_hf_model(MODEL_NAME)
-    # llm = OpenAI()
+    data_path = Path(args.data_dir)
+    cache_path = Path(args.cache_dir)
+    index_path = Path(args.index_dir)
+    st_model_name = args.st_model_name
+    hf_model_name = args.hf_model_name
+    oai_model_name = args.oai_model_name
+    model_platform = args.model_platform
+    k = args.k
+    question = args.question
 
-    prompt_template = """Use the following pieces of context delimited by triple backticks to answer the question at the end. If the context does not contain the answer, do not try to generate answer, just say that the provided context does not include the answer.
+    logging.debug(f"Reading data from directory: {data_path}")
+    logging.debug(f"Cache directory: {cache_path}")
+    logging.debug(f"Index directory: {index_path}")
+    logging.debug(f"Embedding model name: {st_model_name}")
 
-    Context: ```{context}```
+    if model_platform == "oai":
+        logging.debug(f"LLM: {oai_model_name}")
+    else:
+        logging.debug(f"LLM : {hf_model_name}")
 
-    Question: {question}
-    Answer:"""
+    docs = DocumentCache(cache_path=cache_path).load()
 
-    prompt_template = """Answer the question as truthfully as possible using the provided text, and if the answer is not contained within the text below, say "I don't know my lord!"
-    
-    Context: 
-    {context}
-    
-    Question: {question}""".strip()
+    dense_embedder = HuggingFaceEmbeddings(model_name=st_model_name)
+    retriever = SKLearnRetriever.Dense.from_index(docs, dense_embedder, index_path, k=k)
 
-    prompt_template = """Answer the question as truthfully as possible using the provided text, and if the answer is not contained within the text below, respond with "I can't answer that"
+    llm = OpenAI(model_name=oai_model_name) if model_platform == "oai" else get_hf_model(hf_model_name)
 
-    >>CONTEXT<<
-    {context}
-    
-    >>QUESTION<< {question}
-    """.strip()
+    with open("prompts/chat-prompt.txt","r") as f:
+        prompt_template = f.read().strip()
 
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, chain_type_kwargs={"prompt": prompt})
 
-    prompt = PromptTemplate(
-        template=prompt_template, input_variables=["context", "question"]
-    )
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, chain_type_kwargs = {"prompt": prompt})
     answer = qa.run(question)
-
     print(answer)
 
 
-def get_hf_model(model_name:str):
+def get_hf_model(model_name: str):
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, trust_remote_code=True, load_in_8bit=True, device_map="auto"
+        model_name, trust_remote_code=True,
+        load_in_8bit=True,
+        device_map="auto"
     )
-    model = model.eval()
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    #tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=True)
+    model = model.eval()
+
     generation_config = model.generation_config
     generation_config.temperature = 0
     generation_config.num_return_sequences = 1
@@ -78,6 +93,7 @@ def get_hf_model(model_name:str):
     generation_config.eos_token_id = tokenizer.eos_token_id
     stop_tokens = ['Question:', '<human>:', '<bot>:']
     stop_token_ids = [tokenizer.encode(stop_token, add_special_tokens=False)[0] for stop_token in stop_tokens]
+
     generation_pipeline = pipeline(
         model=model,
         tokenizer=tokenizer,

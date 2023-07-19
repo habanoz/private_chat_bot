@@ -1,5 +1,4 @@
 import argparse
-import glob
 import json
 import logging
 import logging.config
@@ -7,74 +6,20 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextSplitter
 
+from bot.loader.data_loader import DataLoader
+from bot.loader.document_cache import DocumentCache
 from scripts.bot.indexer.sklearn_indexer import SKLearnIndexer
-from scripts.bot.loader.doc_csv_loader import DocCsvLoder
-
-
-# import sklearn.metrics
-
-def ingest_pdf_file(pdf_file: str, text_splitter: TextSplitter):
-    logging.debug(f"Ingesting pdf file {pdf_file}")
-
-    loader = PyPDFLoader(pdf_file)
-    pages = loader.load_and_split(text_splitter=text_splitter)
-
-    return pages
-
-
-def ingest_pdf_data(pdf_data_path: Path, text_splitter: TextSplitter):
-    search_pattern = f"{pdf_data_path}/*.pdf"
-    pdf_files = glob.glob(search_pattern)
-
-    pdf_docs = []
-    for pdf_file in pdf_files:
-        pdf_data = ingest_pdf_file(pdf_file, text_splitter)
-        pdf_docs.extend(pdf_data)
-
-    return pdf_docs
-
-
-def ingest_doc_csv_file(csv_path: Path, text_splitter: TextSplitter):
-    logging.debug(f"Ingesting csv file {csv_path}")
-
-    docs = DocCsvLoder(csv_path).load()
-    docs = text_splitter.split_documents(docs)
-
-    return docs
-
-
-def ingest_doc_csv_data(csv_path: Path, text_splitter: TextSplitter):
-    search_pattern = f"{csv_path}/*.csv"
-    files = glob.glob(search_pattern)
-
-    all_docs = []
-    for file in files:
-        docs = ingest_doc_csv_file(Path(file), text_splitter)
-        all_docs.extend(docs)
-
-    return all_docs
 
 
 def ingest_data(data_path: Path, text_splitter: TextSplitter):
-    # pdf_docs = ingest_pdf_data(data_path / "pdf", text_splitter)
-    doc_csv = ingest_doc_csv_data(data_path / "doc_csv", text_splitter)
-    return doc_csv
-
-
-def cache_documents(docs: List[Document], cache_path: Path):
-    if not cache_path.exists():
-        cache_path.mkdir(parents=True)
-
-    name = "document"
-    docs_dict = [(doc.page_content, doc.metadata) for doc in docs]
-    with open(cache_path / f'{name}.json', 'w') as f:
-        json.dump(docs_dict, f, indent=4)
+    docs = DataLoader(data_path).load()
+    docs = text_splitter.split_documents(docs)
+    return docs
 
 
 def index_data(docs: List[Document], embeddings: Embeddings, index_path: Path):
@@ -110,26 +55,16 @@ def main():
     logging.debug(f"Index directory: {index_path}")
     logging.debug(f"Embedding model name: {st_model_name}")
 
-    # 'max_seq_length': 128, 384 dimensional dense vector
-    # model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"  # most downloads in HF
-
-    # 'max_seq_length': 256, 384 dimensional dense vector
-    # model_name = "sentence-transformers/all-MiniLM-L6-v2"  # most likes in HF
-
-    # 'max_seq_length': 384, 768 dimensional dense vector
-    # model_name = "sentence-transformers/all-mpnet-base-v2"  # default
-
-    text_splitter = SentenceTransformersTokenTextSplitter(model_name=st_model_name, chunk_overlap=chunk_overlap,
-                                                          tokens_per_chunk=chunk_size)
+    text_splitter = SentenceTransformersTokenTextSplitter(
+        model_name=st_model_name, chunk_overlap=chunk_overlap, tokens_per_chunk=chunk_size)
     logging.debug(f"Text chunk length: {text_splitter.tokens_per_chunk}")
 
     docs = ingest_data(data_path, text_splitter)
-
     if docs is None or len(docs) == 0:
-        print("No data to index")
+        print("No data to index!")
         return
 
-    cache_documents(docs, cache_path)
+    DocumentCache(cache_path=cache_path).save(docs)
 
     dense_embedder = HuggingFaceEmbeddings(model_name=st_model_name)
     index_data(docs, dense_embedder, index_path)
