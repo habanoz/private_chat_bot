@@ -41,7 +41,8 @@ def main():
     
     Context: ```{context}```
     
-    Question: {question}"""
+    Question: {question}""".strip()
+
     prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question"]
     )
