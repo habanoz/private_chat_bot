@@ -10,7 +10,7 @@ from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, LlamaTokenizer
 
-from bot.loader.document_cache import DocumentCache
+from scripts.bot.loader.document_cache import DocumentCache
 from scripts.bot.retriever.sklearn_retriever import SKLearnRetriever
 
 langchain.debug = True

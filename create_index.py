@@ -11,8 +11,8 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextSplitter
 
-from bot.loader.data_loader import DataLoader
-from bot.loader.document_cache import DocumentCache
+from scripts.bot.loader.data_loader import DataLoader
+from scripts.bot.loader.document_cache import DocumentCache
 from scripts.bot.indexer.sklearn_indexer import SKLearnIndexer
 
 
