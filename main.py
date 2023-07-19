@@ -44,6 +44,15 @@ def main():
     
     Question: {question}""".strip()
 
+    prompt_template = """Answer the question as truthfully as possible using the provided text, and if the answer is not contained within the text below, respond with "I can't answer that"
+
+    >>CONTEXT<<
+    {context}
+    
+    >>QUESTION<< {question}
+    """.strip()
+
+
     prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question"]
     )
