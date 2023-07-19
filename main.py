@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
     parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
                         help='sentence-transformer embedding model')
-    parser.add_argument('--hf_model_name', type=str, default='eachadea/vicuna-7b-1.1', help='Huggingface model name')
+    parser.add_argument('--hf_model_name', type=str, default='meta-llama/Llama-2-7b-chat-hf', help='Huggingface model name')
     parser.add_argument('--oai_model_name', type=str, default='text-davinci-003', help='OpenAI model name')
     parser.add_argument('--model_platform', type=str, default='hf', choices=['hf', 'oai'], help='Model platform')
     parser.add_argument('--k', type=int, default=1, help='retrieval k')
