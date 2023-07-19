@@ -50,7 +50,7 @@ def main():
         task="text-generation",
         # stopping_criteria=stopping_criteria,
         generation_config=generation_config,
-        odel_kwargs={"temperature": 0,
+        model_kwargs={"temperature": 0,
                      # "max_length": 1024,
                      # "eos_token_id": stop_token_ids
                      }
