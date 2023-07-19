@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import langchain
-from langchain import HuggingFacePipeline
+from langchain import HuggingFacePipeline, PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
@@ -58,7 +58,16 @@ def main():
 
     llm = HuggingFacePipeline(pipeline=generation_pipeline)
 
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+    prompt_template = """Use the following pieces of context to answer the question at the end. If the context don't contain the answer, just say that the provided context does not include the answer.
+
+    {context}
+
+    Question: {question}
+    Helpful Answer:"""
+    prompt = PromptTemplate(
+        template=prompt_template, input_variables=["context", "question"]
+    )
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, chain_type_kwargs = {"prompt": prompt})
     answer = qa.run(question)
 
     print(answer)
