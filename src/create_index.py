@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import logging.config
 import shutil
@@ -11,9 +10,9 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter, TextSplitter
 
-from scripts.bot.loader.data_loader import DataLoader
-from scripts.bot.loader.document_cache import DocumentCache
-from scripts.bot.indexer.sklearn_indexer import SKLearnIndexer
+from bot.indexer.sklearn_indexer import SKLearnIndexer
+from bot.loader.data_loader import DataLoader
+from bot.loader.document_cache import DocumentCache
 
 
 def ingest_data(data_path: Path, text_splitter: TextSplitter):

@@ -3,7 +3,7 @@ from pathlib import Path
 import logging
 import glob
 
-from scripts.bot.loader.doc_csv_loader import DocCsvLoder
+from bot.loader.doc_csv_loader import DocCsvLoder
 
 
 class DataLoader:

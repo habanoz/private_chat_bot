@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from scripts.bot.loader.doc_csv_loader import DocCsvLoder
+from bot.loader.doc_csv_loader import DocCsvLoder
 
 
 class DocCsvLoderTest(unittest.TestCase):

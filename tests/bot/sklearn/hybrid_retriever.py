@@ -5,7 +5,7 @@ from pathlib import Path
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
 
-from scripts.bot.sklearn.hybrid_retriever import SKLearnHybridRetriever
+from bot.sklearn.hybrid_retriever import SKLearnHybridRetriever
 
 
 class SKLearnHybridRetrieverTest(unittest.TestCase):
