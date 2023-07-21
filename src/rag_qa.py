@@ -25,9 +25,8 @@ def main():
     parser.add_argument('--data_dir', type=str, default='data', help='Directory to read data from')
     parser.add_argument('--cache_dir', type=str, default='run/cache', help='Cache directory')
     parser.add_argument('--index_dir', type=str, default='run/index', help='Directory to save index')
-    parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2',
-                        help='sentence-transformer embedding model')
-    parser.add_argument('--hf_model_name', type=str, default='meta-llama/Llama-2-7b-hf', help='Huggingface model name')
+    parser.add_argument('--st_model_name', type=str, default='sentence-transformers/all-mpnet-base-v2', help='sentence-transformer embedding model')
+    parser.add_argument('--hf_model_name', type=str, default='meta-llama/Llama-2-7b-chat-hf', help='Huggingface model name')
     parser.add_argument('--oai_model_name', type=str, default='text-davinci-003', help='OpenAI model name')
     parser.add_argument('--model_platform', type=str, default='hf', choices=['hf', 'oai'], help='Model platform')
     parser.add_argument('--k', type=int, default=1, help='retrieval k')
@@ -35,6 +34,7 @@ def main():
                         help='Question')
     parser.add_argument('--device', type=str, default='auto', choices=["auto", "cpu", "cuda"], help='device')
     parser.add_argument('--use_8bit', action='store_true', help='8bit quantization for chat model')
+    parser.add_argument('--run_name', type=str, default="{model_name}", help='Give a name to this run. Helpful for testing.')
 
     args = parser.parse_args()
 
